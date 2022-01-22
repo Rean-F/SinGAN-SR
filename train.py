@@ -56,6 +56,14 @@ class Trainer:
         self.discriminators[scale].save_weights(D_file, save_format="tf")
         np.save(self.checkpoint_dir + "/noise_amp.npy", self.noise_amps)
 
+    def load_weights(self, scale):
+        if self.num_filters[scale] == self.num_filters[scale - 1]:
+            prev_scale_dir = os.path.join(self.checkpoint_dir, f"{scale - 1}")
+            prev_G_file = os.path.join(prev_scale_dir, "G/G")
+            prev_D_file = os.path.join(prev_scale_dir, "D/D")
+            self.generators[scale].load_weights(prev_G_file)
+            self.discriminators[scale].load_weights(prev_D_file)
+
     def train(self, img_path):
         real_imgs = load_img(img_path)
         real_imgs = normalize_m11(real_imgs)
@@ -66,6 +74,9 @@ class Trainer:
         for scale in range(self.num_scales):
             print(f"train scale {scale}")
             print(self.noise_amps)
+            if scale > 0:
+                self.load_weights(scale)
+            
             real = reals[scale]
             discriminator = self.discriminators[scale]
             generator = self.generators[scale]
