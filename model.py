@@ -33,7 +33,7 @@ class ConvBlock(Layer):
             kernel_size=3,
             strides=1,
             padding="valid",
-            use_bias=False,
+            use_bias=True,
             kernel_initializer=self.initializer
         )
         self.instance_norm = InstanceNorm()

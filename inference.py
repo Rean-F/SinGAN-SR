@@ -30,7 +30,7 @@ class Inferencer:
         self.noise_amp = np.load(checkpoint_dir + "/noise_amp.npy")
         for scale in range(self.num_scales):
             generator = Generator(num_filters=get_conv_filters(scale))
-            generator.load_weights(os.path.join(checkpoint_dir, f"{scale}", "G/G")).expect_partial()
+            generator.load_weights(os.path.join(checkpoint_dir, f"{scale}", "G/G"))
             self.generators.append(generator)
         return
 
@@ -40,7 +40,7 @@ class Inferencer:
         reals = create_pyramid(real_img, self.num_scales, self.scale_factor, self.min_size)
         for i in range(self.num_samples):
             fake = self.random_generate(reals, inject_scale)
-            save_img(fake, os.path.join(self.result_dir, f"random_{i}.jpg"))
+            save_img(fake, os.path.join(self.result_dir, f"random_{i}.png"))
     
     def random_generate(self, reals, inject_scale=0):
         if inject_scale > 0:
@@ -61,7 +61,7 @@ class Inferencer:
         real_img = normalize_m11(real_img)
         
         batch_size = 1
-        num_iter = 16
+        num_iter = 20
         hs = [int(real_img.shape[1] * sr_scale ** (i/num_iter)) for i in range(num_iter)]
         ws = [int(real_img.shape[2] * sr_scale ** (i/num_iter)) for i in range(num_iter)]
         sr_generator = self.generators[-1]
@@ -69,17 +69,18 @@ class Inferencer:
         for h, w in zip(hs, ws):
             prev = imresize(prev, new_shapes=[batch_size, h, w])
             z = tf.random.uniform(prev.shape, dtype=tf.float32)
+            z = self.noise_amp[-1] * z
             prev = sr_generator(prev, z)
-        save_img(prev, os.path.join(self.result_dir, f"{sr_scale}x.jpg"))
+        save_img(prev, os.path.join(self.result_dir, f"{sr_scale}x.png"))
     
 
 if __name__ == "__main__":
-    img_base_dir = "fantasy-scene"
-    img_dir = os.path.join("dataset", img_base_dir)
-    img_path = os.path.join(img_dir, "1.jpg")
+    img_name = "island"
+    img_format = "png"
+    img_path = os.path.join("dataset", img_name + "." + img_format)
 
-    checkpoint_dir = os.path.join("models", img_base_dir)
-    result_dir = os.path.join("data", img_base_dir)
+    checkpoint_dir = os.path.join("models", img_name)
+    result_dir = os.path.join("data", img_name)
     if not os.path.exists(result_dir):
         os.mkdir(result_dir)
 

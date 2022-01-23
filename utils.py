@@ -33,7 +33,7 @@ def save_img(img, path):
     img = denormalize_m11(img)
     img = clip_0_255(img)
     img = Image.fromarray(img.numpy().astype(np.uint8).squeeze())
-    img.save(path)
+    img.save(path, format="png")
 
 def imresize(img, min_size=0, scale_factor=None, new_shapes=None):
     assert not (scale_factor is None and new_shapes is None)

@@ -65,9 +65,12 @@ class Trainer:
             self.discriminators[scale].load_weights(prev_D_file)
 
     def train(self, img_path):
-        real_imgs = load_img(img_path)
-        real_imgs = normalize_m11(real_imgs)
-        reals = create_pyramid(real_imgs, self.num_scales, self.scale_factor, self.min_size)
+        real_img = load_img(img_path)
+        real_img = normalize_m11(real_img)
+        reals = create_pyramid(real_img, self.num_scales, self.scale_factor, self.min_size)
+
+        for scale in range(self.num_scales):
+            save_img(reals[scale], os.path.join(self.result_dir, f"pyramid_{scale}.png"))
 
         self.noise_amps = []
 
@@ -122,9 +125,9 @@ class Trainer:
                 g_opt.apply_gradients(zip(gen_gradients, generator.trainable_variables))
         if step % 500 == 0:
             prev_rand = self.generate_from_coarsest_rand(reals, scale)
-            z_rand = tf.random.normal(real.shape, dtype=tf.float32)
+            z_rand = noise_amp * tf.random.normal(real.shape, dtype=tf.float32)
             fake = generator(prev_rand, z_rand)[0:1, ...]
-            save_img(fake, os.path.join(self.result_dir, f"training_{scale}_{step}.jpg"))
+            save_img(fake, os.path.join(self.result_dir, f"training_{scale}_{step}.png"))
 
         metrics = [dis_loss, gen_loss, rec_loss]
         return metrics
@@ -209,8 +212,9 @@ class Trainer:
 if __name__ == "__main__":
     import os
 
-    img_name = "anime.jpg"
-    img_path = os.path.join("dataset", img_name)
+    img_name = "island"
+    img_format = "png"
+    img_path = os.path.join("dataset", img_name + "." + img_format)
     checkpoint_dir = os.path.join("models", img_name)
     if not os.path.exists(checkpoint_dir):
         os.mkdir(checkpoint_dir)
@@ -219,7 +223,7 @@ if __name__ == "__main__":
         os.mkdir(result_dir)
     
     trainer = Trainer(
-        num_scale=8,
+        num_scale=10,
         num_iters=2001,
         learning_rate=5e-4,
         max_size=960,
