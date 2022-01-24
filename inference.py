@@ -61,9 +61,9 @@ class Inferencer:
         real_img = normalize_m11(real_img)
         
         batch_size = 1
-        num_iter = 20
-        hs = [int(real_img.shape[1] * sr_scale ** (i/num_iter)) for i in range(num_iter)]
-        ws = [int(real_img.shape[2] * sr_scale ** (i/num_iter)) for i in range(num_iter)]
+        num_iter = 4
+        hs = [int(real_img.shape[1] * sr_scale ** (i/num_iter)) for i in range(num_iter+1)]
+        ws = [int(real_img.shape[2] * sr_scale ** (i/num_iter)) for i in range(num_iter+1)]
         sr_generator = self.generators[-1]
         prev = real_img
         for h, w in zip(hs, ws):
